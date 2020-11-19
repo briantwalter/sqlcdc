@@ -1,0 +1,32 @@
+{
+  "name": "cdcdemo_customers",
+  "config": {
+    "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+    "tasks.max": "1",
+    "database.dbname": "cdcdemo",
+    "database.user": "sa",
+    "database.port": "1433",
+    "database.hostname": "localhost",
+    "database.password": "Password!",
+    "database.server.name": "sqlserver",
+    "table.whitelist": "dbo.customers",
+    "database.history.kafka.topic": "db.history",
+    "database.history.kafka.bootstrap.servers": "BOOTSTRAP:9092",
+    "database.history.consumer.security.protocol": "SASL_SSL",
+    "database.history.consumer.ssl.endpoint.identification.algorithm": "https",
+    "database.history.consumer.sasl.mechanism": "PLAIN",
+    "database.history.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"APIKEY\" password=\"SECRET\";",
+    "database.history.producer.security.protocol": "SASL_SSL",
+    "database.history.producer.ssl.endpoint.identification.algorithm": "https",
+    "database.history.producer.sasl.mechanism": "PLAIN",
+    "database.history.producer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"APIKEY\" password=\"SECRET\";",
+    "value.converter": "io.confluent.connect.avro.AvroConverter",
+    "value.converter.basic.auth.credentials.source": "USER_INFO",
+    "value.converter.schema.registry.basic.auth.user.info": "SR_APIKEY:SR_SECRET",
+    "value.converter.schema.registry.url": "SR_URL",
+    "key.converter": "io.confluent.connect.avro.AvroConverter",
+    "key.converter.basic.auth.credentials.source": "USER_INFO",
+    "key.converter.schema.registry.basic.auth.user.info": "SR_APIKEY:SR_SECRET",
+    "key.converter.schema.registry.url": "SR_URL"
+  }
+}

@@ -1,0 +1,64 @@
+#!/bin/bash
+
+#Pull docker image
+docker pull mcr.microsoft.com/mssql/server:2017-latest
+
+#Run docker container
+docker run -e 'ACCEPT_EULA=Y' -e 'MSSQL_AGENT_ENABLED=true' \
+-e 'MSSQL_PID=Standard' -e 'SA_PASSWORD=Password!' \
+-p 1433:1433 --name sqldemo \
+-d mcr.microsoft.com/mssql/server:2017-latest
+
+echo -n "Waiting for SQL to start."
+sleep 10
+echo -n "."
+sleep 10
+echo -n "."
+sleep 5
+echo "."
+
+cat <<CREATEANDINSERT | docker exec -i sqldemo bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+CREATE DATABASE cdcdemo;
+GO
+USE cdcdemo;
+EXEC sys.sp_cdc_enable_db;
+CREATE TABLE customers (
+  id INTEGER IDENTITY(1001,1) NOT NULL PRIMARY KEY,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE
+);
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Sally','Thomas','sally.thomas@acme.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('George','Bailey','gbailey@foobar.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Edward','Walker','ed@walker.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Anne','Kretchmar','annek@noanswer.org');
+EXEC sys.sp_cdc_enable_table @source_schema = 'dbo', @source_name = 'customers', @role_name = NULL, @supports_net_changes = 0;
+GO
+
+CREATE TABLE inventory (
+  id INTEGER IDENTITY(1001,1) NOT NULL PRIMARY KEY,
+  stock_number VARCHAR(255) NOT NULL,
+  description VARCHAR(255) NOT NULL,
+  quantity INTEGER NOT NULL
+);
+INSERT INTO inventory(stock_number,description,quantity)
+  VALUES ('UPC675309','USB-C Cable 1m','57');
+INSERT INTO inventory(stock_number,description,quantity)
+  VALUES ('UPC675411','5VDC Regulated Power Supply','19');
+INSERT INTO inventory(stock_number,description,quantity)
+  VALUES ('UPC834011','Wi-Fi 802.11ac USB Dongle','7');
+INSERT INTO inventory(stock_number,description,quantity)
+  VALUES ('UPC098872','Cat6 Ethernet Patch Cable 3m','43');
+EXEC sys.sp_cdc_enable_table @source_schema = 'dbo', @source_name = 'inventory', @role_name = NULL, @supports_net_changes = 0;
+GO
+CREATEANDINSERT
+
+
+docker exec -it sqldemo bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password! -y 30 -Y 30'
+
+
+docker stop sqldemo && docker rm sqldemo
